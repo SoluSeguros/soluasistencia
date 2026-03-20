@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -271,7 +271,7 @@ button {
   background: #f7fbff;
   border-radius: 10px;
   padding: 10px;
-  display: none;
+  display: block;
 }
 
 .contract-switch h4 {
@@ -601,6 +601,7 @@ input:focus, select:focus {
 
 .auth-box {
   border: 1px solid #cfdef5 !important;
+  overflow: hidden;
 }
 
 .auth-panel {
@@ -656,6 +657,11 @@ input:focus, select:focus {
 }
 
 @media (max-width: 768px) {
+  .app.auth-locked {
+    grid-template-columns: 1fr !important;
+    justify-content: stretch !important;
+  }
+
   h1 {
     font-size: 1.95rem !important;
     line-height: 1.08;
@@ -670,6 +676,15 @@ input:focus, select:focus {
   .grid-2 {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .auth-panel {
+    padding: 10px !important;
+  }
+
+  .auth-actions > button {
+    flex: 1 1 100%;
+    min-height: 48px;
   }
 
   .stepper {
@@ -722,6 +737,14 @@ input:focus, select:focus {
     padding: 12px !important;
   }
 
+  .auth-box {
+    padding: 10px !important;
+  }
+
+  .auth-panel h4 {
+    font-size: 0.9rem;
+  }
+
   h1 {
     font-size: 1.7rem !important;
   }
@@ -763,13 +786,18 @@ input:focus, select:focus {
     max-height: 88vh;
   }
 }
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
 </style>
 </head>
 <body>
 <main class="app container-xxl">
   <section class="card panel">
-    <h1>Formato de<br>Desistimiento</h1>
-    <p class="sub">Asistente paso a paso para completar y firmar el documento.</p>
+    <h1 id="formTitle">Formato de<br>Desistimiento</h1>
+    <p class="sub" id="formSub">Asistente paso a paso para completar y firmar el documento.</p>
 
     <div class="contract-switch">
       <h4>Tipo de contrato</h4>
@@ -789,7 +817,7 @@ input:focus, select:focus {
           <input class="no-sync" id="authLoginEmail" type="email" placeholder="correo@dominio.com">
           <input class="no-sync" id="authLoginPassword" type="password" placeholder="Contraseña">
           <div class="auth-actions">
-            <button class="btn-main" onclick="iniciarSesion()">Ingresar</button>
+            <button id="btnLogin" class="btn-main" onclick="iniciarSesion()">Ingresar</button>
           </div>
         </div>
         <div class="auth-panel">
@@ -797,7 +825,7 @@ input:focus, select:focus {
           <input class="no-sync" id="authRegisterEmail" type="email" placeholder="correo@dominio.com">
           <input class="no-sync" id="authRegisterPassword" type="password" placeholder="Contraseña">
           <div class="auth-actions">
-            <button class="btn-soft" onclick="registrarUsuario()">Crear usuario</button>
+            <button id="btnRegister" class="btn-soft" onclick="registrarUsuario()">Crear usuario</button>
           </div>
         </div>
       </div>
@@ -831,7 +859,7 @@ input:focus, select:focus {
         </div>
         <div>
           <label for="cedula">Cedula</label>
-          <input id="cedula" placeholder="Ej. 123456789">
+          <input id="cedula" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 123456789">
         </div>
       </div>
 
@@ -843,7 +871,7 @@ input:focus, select:focus {
           </div>
           <div>
             <label for="docMenor">Documento del menor</label>
-            <input id="docMenor" placeholder="Documento">
+            <input id="docMenor" inputmode="numeric" pattern="[0-9]*" placeholder="Documento">
           </div>
         </div>
         <label for="parentesco">Parentesco</label>
@@ -863,7 +891,7 @@ input:focus, select:focus {
         </div>
         <div>
           <label for="cedulaImp">Cedula del implicado</label>
-          <input id="cedulaImp" placeholder="Cedula">
+          <input id="cedulaImp" inputmode="numeric" pattern="[0-9]*" placeholder="Cedula">
         </div>
       </div>
 
@@ -877,7 +905,7 @@ input:focus, select:focus {
         </div>
         <div>
           <label for="interno">Numero interno</label>
-          <input id="interno" placeholder="Ej. 45">
+          <input id="interno" inputmode="numeric" pattern="[0-9]*" placeholder="Ej. 45">
         </div>
       </div>
 
@@ -895,7 +923,7 @@ input:focus, select:focus {
         </div>
         <div>
           <label for="conductorCedula">Cedula del conductor</label>
-          <input id="conductorCedula" placeholder="Cedula">
+          <input id="conductorCedula" inputmode="numeric" pattern="[0-9]*" placeholder="Cedula">
         </div>
       </div>
 
@@ -931,7 +959,7 @@ input:focus, select:focus {
       </div>
       <div id="estado" class="state"></div>
       <div id="estadoCloud" class="hint"></div>
-      <p class="hint">Consejo: genera primero para actualizar la vista previa y luego descarga el PDF.</p>
+      <p class="hint" id="flowHint">Consejo: genera primero para actualizar la vista previa y luego descarga el PDF.</p>
     </div>
     </div>
   </section>
@@ -944,7 +972,7 @@ input:focus, select:focus {
       <img class="doc-watermark" src="./soluasistencia.png" alt="">
 
       <div class="doc-body">
-        <h2>DESISTIMIENTO:</h2>
+        <h2 id="docTitle">DESISTIMIENTO:</h2>
         <div id="texto" class="doc-texto"></div>
 
         <div class="firma">
@@ -1002,6 +1030,16 @@ input:focus, select:focus {
   </div>
 </div>
 
+<div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+  <div class="modal">
+    <h3 id="authModalTitle">Acceso de usuario</h3>
+    <div id="authModalMessage" class="modal-summary"></div>
+    <div class="btn-row" style="margin-top: 10px;">
+      <button class="btn-main" onclick="cerrarModalAuth()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const panels = Array.from(document.querySelectorAll(".step-panel"));
 const dots = Array.from(document.querySelectorAll(".step-dot"));
@@ -1016,6 +1054,9 @@ const loadingProgressText = document.getElementById("loadingProgressText");
 const sentModal = document.getElementById("sentModal");
 const sentSummary = document.getElementById("sentSummary");
 const sentDownloadBtn = document.getElementById("sentDownloadBtn");
+const authModal = document.getElementById("authModal");
+const authModalTitle = document.getElementById("authModalTitle");
+const authModalMessage = document.getElementById("authModalMessage");
 const estadoCloud = document.getElementById("estadoCloud");
 const authStatus = document.getElementById("authStatus");
 const authMessage = document.getElementById("authMessage");
@@ -1025,12 +1066,56 @@ const appProtectedLeft = document.getElementById("appProtectedLeft");
 const loginOnlyNote = document.getElementById("loginOnlyNote");
 const appMain = document.querySelector("main.app");
 const contratoTipo = document.getElementById("contratoTipo");
+const formTitle = document.getElementById("formTitle");
+const formSub = document.getElementById("formSub");
+const docTitle = document.getElementById("docTitle");
+const flowHint = document.getElementById("flowHint");
+const btnLogin = document.getElementById("btnLogin");
+const btnRegister = document.getElementById("btnRegister");
 let currentStep = 0;
 
 const SUPABASE_URL = "https://nbdacyepdjamgqoibtuv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_2P3PFpeh5EaJZqWfDHGXSA_hDoA9VRv";
 const DEFAULT_WEBHOOK_URL = "https://connect.pabbly.com/workflow/sendwebhookdata/IjU3NjcwNTZmMDYzMjA0MzA1MjZkNTUzNjUxMzci_pc";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CONTRACT_META = {
+  desistimiento: {
+    formTitle: "Formato de<br>Desistimiento",
+    formSub: "Asistente paso a paso para completar y firmar el documento.",
+    docTitle: "DESISTIMIENTO:",
+    subject: "Documento de desistimiento firmado",
+    event: "firma_desistimiento_encolado",
+    pdfName: "DESISTIMIENTO.pdf",
+    storagePrefix: "desistimiento"
+  },
+  afavor: {
+    formTitle: "Contrato de Transaccion<br>A Favor",
+    formSub: "Asistente en un solo archivo para diligenciar y enviar contrato A Favor.",
+    docTitle: "CONTRATO DE TRANSACCION A FAVOR",
+    subject: "Contrato A Favor firmado",
+    event: "firma_contrato_afavor_encolado",
+    pdfName: "CONTRATO_A_FAVOR.pdf",
+    storagePrefix: "contrato_a_favor"
+  },
+  encontra: {
+    formTitle: "Contrato de Transaccion<br>En Contra",
+    formSub: "Asistente en un solo archivo para diligenciar y enviar contrato En Contra.",
+    docTitle: "CONTRATO DE TRANSACCION EN CONTRA",
+    subject: "Contrato En Contra firmado",
+    event: "firma_contrato_encontra_encolado",
+    pdfName: "CONTRATO_EN_CONTRA.pdf",
+    storagePrefix: "contrato_en_contra"
+  },
+  mutuo: {
+    formTitle: "Contrato de Transaccion<br>Mutuo Acuerdo",
+    formSub: "Asistente en un solo archivo para diligenciar y enviar contrato Mutuo Acuerdo.",
+    docTitle: "CONTRATO DE TRANSACCION MUTUO ACUERDO",
+    subject: "Contrato Mutuo Acuerdo firmado",
+    event: "firma_contrato_mutuo_encolado",
+    pdfName: "CONTRATO_MUTUO_ACUERDO.pdf",
+    storagePrefix: "contrato_mutuo_acuerdo"
+  }
+};
 
 let remoteCaseId = localStorage.getItem("firma_case_id") || null;
 let remotePublicToken = localStorage.getItem("firma_public_token") || null;
@@ -1114,14 +1199,35 @@ function setEstado(msg, error = true) {
   estado.textContent = msg;
 }
 
+function getContractKind() {
+  return contratoTipo?.value || "desistimiento";
+}
+
+function getContractMeta() {
+  return CONTRACT_META[getContractKind()] || CONTRACT_META.desistimiento;
+}
+
+function updateContractUi() {
+  const meta = getContractMeta();
+  if (formTitle) formTitle.innerHTML = meta.formTitle;
+  if (formSub) formSub.textContent = meta.formSub;
+  if (docTitle) docTitle.textContent = meta.docTitle;
+  if (flowHint) flowHint.textContent = "Consejo: confirma datos, revisa vista previa y luego envía.";
+}
+
 function initContractSwitcher() {
   if (!contratoTipo) return;
-  contratoTipo.value = "desistimiento";
+  const saved = localStorage.getItem("contract_kind");
+  contratoTipo.value = CONTRACT_META[saved] ? saved : "desistimiento";
+  updateContractUi();
 }
 
 function switchContractType() {
   if (!contratoTipo) return;
-  contratoTipo.value = "desistimiento";
+  localStorage.setItem("contract_kind", getContractKind());
+  updateContractUi();
+  updatePreview(false);
+  queueRemoteSave();
 }
 
 function showLoadingModal(show) {
@@ -1208,6 +1314,50 @@ function setAuthMessage(msg, ok = false) {
   authMessage.textContent = msg;
 }
 
+function showAuthModal(title, messageHtml) {
+  if (authModalTitle) authModalTitle.textContent = title || "Acceso de usuario";
+  if (authModalMessage) authModalMessage.innerHTML = messageHtml || "";
+  if (authModal) authModal.classList.add("show");
+}
+
+function cerrarModalAuth() {
+  if (authModal) authModal.classList.remove("show");
+}
+
+function setAuthButtonsLoading(isLoading, action) {
+  const lockLogin = action === "login" || action === "both";
+  const lockRegister = action === "register" || action === "both";
+  if (btnLogin && lockLogin) {
+    btnLogin.disabled = isLoading;
+    btnLogin.textContent = isLoading ? "Ingresando..." : "Ingresar";
+  }
+  if (btnRegister && lockRegister) {
+    btnRegister.disabled = isLoading;
+    btnRegister.textContent = isLoading ? "Creando..." : "Crear usuario";
+  }
+}
+
+function enforceNumericFields() {
+  const ids = ["cedula", "docMenor", "cedulaImp", "interno", "conductorCedula"];
+  ids.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", () => {
+      const clean = (el.value || "").replace(/\D+/g, "");
+      if (clean !== el.value) el.value = clean;
+    });
+    el.addEventListener("paste", (ev) => {
+      ev.preventDefault();
+      const text = (ev.clipboardData?.getData("text") || "").replace(/\D+/g, "");
+      const start = el.selectionStart ?? el.value.length;
+      const end = el.selectionEnd ?? el.value.length;
+      const next = `${el.value.slice(0, start)}${text}${el.value.slice(end)}`;
+      el.value = next;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+}
+
 function renderAuthGate() {
   const isAuthed = Boolean(currentUser);
   if (appProtectedLeft) appProtectedLeft.classList.toggle("hidden", !isAuthed);
@@ -1242,12 +1392,16 @@ async function registrarUsuario() {
   if (!email || !password) {
     setAuthMessage("Ingresa correo y contraseña para crear usuario.");
     setEstado("Ingresa correo y contraseña para crear usuario.");
+    showAuthModal("Datos incompletos", "<p>Debes ingresar correo y contraseña para crear el usuario.</p>");
     return;
   }
+  setAuthButtonsLoading(true, "register");
   const { error } = await sb.auth.signUp({ email, password });
   if (error) {
     setAuthMessage(`No se pudo crear usuario: ${sbErr(error)}`);
     setEstado(`No se pudo crear usuario: ${sbErr(error)}`);
+    showAuthModal("Error al crear usuario", `<p>${escapeHtml(sbErr(error))}</p>`);
+    setAuthButtonsLoading(false, "register");
     return;
   }
 
@@ -1258,11 +1412,15 @@ async function registrarUsuario() {
     updateAuthStatus();
     setAuthMessage("Usuario creado y sesión iniciada correctamente.", true);
     setEstado("Usuario creado y sesión iniciada.", false);
+    showAuthModal("Usuario creado", `<p>La cuenta <strong>${escapeHtml(email)}</strong> fue creada y la sesión está activa.</p>`);
+    setAuthButtonsLoading(false, "register");
     return;
   }
 
   setAuthMessage("Usuario creado. Si no inicia sesión automáticamente, ingresa con tus credenciales.", true);
   setEstado("Usuario creado.", false);
+  showAuthModal("Usuario creado", `<p>La cuenta <strong>${escapeHtml(email)}</strong> fue creada. Ahora puedes iniciar sesión.</p>`);
+  setAuthButtonsLoading(false, "register");
 }
 
 async function iniciarSesion() {
@@ -1271,8 +1429,10 @@ async function iniciarSesion() {
   if (!email || !password) {
     setAuthMessage("Ingresa correo y contraseña para iniciar sesión.");
     setEstado("Ingresa correo y contraseña.");
+    showAuthModal("Datos incompletos", "<p>Debes ingresar correo y contraseña para iniciar sesión.</p>");
     return;
   }
+  setAuthButtonsLoading(true, "login");
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) {
     let msg = `No se pudo iniciar sesion: ${sbErr(error)}`;
@@ -1284,12 +1444,16 @@ async function iniciarSesion() {
     }
     setAuthMessage(msg);
     setEstado(msg);
+    showAuthModal("No se pudo iniciar sesión", `<p>${escapeHtml(msg)}</p>`);
+    setAuthButtonsLoading(false, "login");
     return;
   }
   currentUser = data?.user || null;
   updateAuthStatus();
   setAuthMessage("Sesión iniciada correctamente.", true);
   setEstado("Sesion iniciada correctamente.", false);
+  showAuthModal("Inicio de sesión exitoso", `<p>Bienvenido(a), <strong>${escapeHtml(email)}</strong>.</p><p>Ya puedes usar todo el formulario.</p>`);
+  setAuthButtonsLoading(false, "login");
 }
 
 async function cerrarSesion() {
@@ -1325,6 +1489,7 @@ function guardarIdentidadLocal() {
 
 function getSnapshot() {
   return {
+    contractKind: getContractKind(),
     tipo: valor("tipo"),
     nombre: valor("nombre"),
     cedula: valor("cedula"),
@@ -1442,7 +1607,7 @@ async function uploadPdfToStorage(pdfBlob) {
   const okInit = await initRemoteCaseIfNeeded(document.getElementById("texto").innerHTML || null);
   if (!okInit) return false;
 
-  const path = `${remoteCaseId}/${remotePublicToken}/desistimiento_${Date.now()}.pdf`;
+  const path = `${remoteCaseId}/${remotePublicToken}/${getContractMeta().storagePrefix}_${Date.now()}.pdf`;
   const { error: upErr } = await sb.storage
     .from("signed-documents")
     .upload(path, pdfBlob, { contentType: "application/pdf", upsert: true });
@@ -1568,6 +1733,19 @@ function validateStep(step) {
     }
   }
 
+  const numericIds = ["cedula", "docMenor", "cedulaImp", "interno", "conductorCedula"];
+  for (const id of numericIds) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const required = need.includes(id) || (id === "docMenor" && valor("tipo") === "menor");
+    if (!required) continue;
+    if (!/^\d+$/.test(valor(id))) {
+      setEstado("Los campos numéricos solo aceptan dígitos.");
+      el.focus();
+      return false;
+    }
+  }
+
   if (step === 2) {
     if (signaturePad.isEmpty()) {
       setEstado("La firma del compareciente es obligatoria.");
@@ -1632,9 +1810,41 @@ function linea(v) {
   return `<span class=\"line\" style=\"min-width:${dynamic}ch\">${escapeHtml(text)}</span>`;
 }
 
-function buildTexto(tipo, data) {
+function buildTexto(contractKind, comparecienteTipo, data) {
   const { nombre, implicado, cedulaImp, dia, mes, anio, placa, interno, nombreMenor, docMenor, parentesco } = data;
-  if (tipo === "adulto") {
+  const baseCompareciente = comparecienteTipo === "adulto"
+    ? `Yo, ${linea(nombre)} mayor de edad, identificado como aparece al pie de mi firma,`
+    : `Yo, ${linea(nombre)} mayor de edad, identificado(a) como aparece al pie de mi firma, en calidad de representante del menor ${linea(nombreMenor)} con documento ${linea(docMenor)} y parentesco ${linea(parentesco)},`;
+
+  if (contractKind === "afavor") {
+    return `
+      <p>${baseCompareciente} declaro que celebro acuerdo transaccional A FAVOR respecto del evento de transito ocurrido dia ${linea(dia)} mes ${linea(mes)} ano ${linea(anio)}, donde se involucra vehiculo de placas ${linea(placa)} y numero interno ${linea(interno)}.</p>
+      <p>Las partes acuerdan solucionar el conflicto por via directa, evitando litigios penales, civiles, administrativos y contravencionales, dejando constancia de aceptacion libre y voluntaria frente al senor ${linea(implicado)} identificado con cedula ${linea(cedulaImp)}.</p>
+      <p>Con el presente acuerdo, se reconoce la validez de lo pactado y se solicita su cumplimiento integral conforme a la ley colombiana.</p>
+      <p>Para constancia, firmo libre y voluntariamente hoy ${linea(dia)} de ${linea(mes)} de ${linea(anio)}.</p>
+    `;
+  }
+
+  if (contractKind === "encontra") {
+    return `
+      <p>${baseCompareciente} declaro que celebro acuerdo transaccional EN CONTRA respecto del evento de transito ocurrido dia ${linea(dia)} mes ${linea(mes)} ano ${linea(anio)}, donde se involucra vehiculo de placas ${linea(placa)} y numero interno ${linea(interno)}.</p>
+      <p>Las partes dejan constancia de los hechos y de la voluntad de resolver integralmente las controversias derivadas del siniestro, incluyendo obligaciones civiles y administrativas frente al senor ${linea(implicado)} identificado con cedula ${linea(cedulaImp)}.</p>
+      <p>Este acuerdo presta merito de transaccion y evita procesos posteriores sobre los mismos hechos, salvo incumplimiento de lo pactado.</p>
+      <p>Para constancia, firmo libre y voluntariamente hoy ${linea(dia)} de ${linea(mes)} de ${linea(anio)}.</p>
+    `;
+  }
+
+  if (contractKind === "mutuo") {
+    return `
+      <p><strong>CONTRATO DE TRANSACCION MUTUO ACUERDO</strong></p>
+      <p>Entre las partes intervinientes se acuerda de manera libre y voluntaria resolver de forma definitiva el incidente ocurrido dia ${linea(dia)} mes ${linea(mes)} ano ${linea(anio)} en el que se involucra vehiculo de placas ${linea(placa)} y numero interno ${linea(interno)}.</p>
+      <p>El compareciente ${linea(nombre)} y el implicado ${linea(implicado)} identificado con cedula ${linea(cedulaImp)} aceptan paz y salvo reciproco frente a las reclamaciones derivadas del hecho, en los terminos permitidos por la ley.</p>
+      <p>Los acuerdos realizados tienen fundamento en los articulos 2469 y siguientes del Codigo Civil Colombiano y hacen transito a cosa juzgada entre las partes.</p>
+      <p>En senal de aceptacion, se firma hoy ${linea(dia)} de ${linea(mes)} de ${linea(anio)}.</p>
+    `;
+  }
+
+  if (comparecienteTipo === "adulto") {
     return `
       <p>Yo, ${linea(nombre)} mayor de edad, identificado como aparece al pie de mi firma, mediante este escrito manifiesto que es mi voluntad libre y espontanea DESISTIR de toda asistencia medica o prehospitalaria, accion penal, civil, administrativa y contravencional en contra del senor ${linea(implicado)} mayor de edad, identificado con cedula de ciudadania No. ${linea(cedulaImp)}, por los hechos acaecidos en accidente de transito de fecha, dia ${linea(dia)} mes ${linea(mes)} ano ${linea(anio)}, en el que esta involucrado el vehiculo de placas ${linea(placa)} numero interno ${linea(interno)}; en consecuencia de igual forma desisto de toda accion penal, civil, administrativa y contravencional en contra de la entidad propietaria del vehiculo, empresa afiliadora, conductor y aseguradora.</p>
       <p>Conforme a la Ley 906 de 2004 C.P.P., Art. 76. "En cualquier caso el desistimiento se hara extensivo a todos los autores o participes del delito investigado y una vez aceptado no admitira retractacion".</p>
@@ -1660,7 +1870,8 @@ function getSiNo(ok) {
 }
 
 function updatePreview(strict = false) {
-  const tipo = valor("tipo");
+  const comparecienteTipo = valor("tipo");
+  const contractKind = getContractKind();
   const nombre = valor("nombre");
   const cedula = valor("cedula");
   const implicado = valor("implicado");
@@ -1685,7 +1896,7 @@ function updatePreview(strict = false) {
   const docMenor = valor("docMenor");
   const parentesco = valor("parentesco");
 
-  const texto = buildTexto(tipo, {
+  const texto = buildTexto(contractKind, comparecienteTipo, {
     nombre, implicado, cedulaImp, dia, mes, anio, placa, interno,
     nombreMenor, docMenor, parentesco
   });
@@ -1735,7 +1946,9 @@ async function confirmarDatos() {
   }
   if (!updatePreview(false)) return;
 
-  const tipo = valor("tipo");
+  const comparecienteTipo = valor("tipo");
+  const contractKind = getContractKind();
+  const contractLabel = contratoTipo?.selectedOptions?.[0]?.textContent || "Desistimiento";
   const nombre = valor("nombre");
   const cedula = valor("cedula");
   const implicado = valor("implicado");
@@ -1750,12 +1963,13 @@ async function confirmarDatos() {
   const parentesco = valor("parentesco");
 
   let extraMenor = "";
-  if (tipo === "menor") {
+  if (comparecienteTipo === "menor") {
     extraMenor = `<p><strong>Menor:</strong> ${escapeHtml(nombreMenor)} | <strong>Documento:</strong> ${escapeHtml(docMenor)} | <strong>Parentesco:</strong> ${escapeHtml(parentesco)}</p>`;
   }
 
   confirmSummary.innerHTML = `
-    <p><strong>Tipo:</strong> ${tipo === "menor" ? "Representante de menor" : "Mayor de edad"}</p>
+    <p><strong>Contrato:</strong> ${escapeHtml(contractLabel)} (${escapeHtml(contractKind)})</p>
+    <p><strong>Tipo compareciente:</strong> ${comparecienteTipo === "menor" ? "Representante de menor" : "Mayor de edad"}</p>
     <p><strong>Compareciente:</strong> ${escapeHtml(nombre)} | <strong>Cedula:</strong> ${escapeHtml(cedula)}</p>
     ${extraMenor}
     <p><strong>Implicado:</strong> ${escapeHtml(implicado)} | <strong>Cedula:</strong> ${escapeHtml(cedulaImp)}</p>
@@ -1805,6 +2019,7 @@ async function enviarWebhookDirecto(webhook, payload) {
 
 async function encolarCorreo() {
   if (!requireAuth()) return;
+  const meta = getContractMeta();
   const email = valor("emailDestino");
   const webhook = DEFAULT_WEBHOOK_URL;
   if (!email) {
@@ -1850,7 +2065,7 @@ async function encolarCorreo() {
       p_case_id: remoteCaseId,
       p_public_token: remotePublicToken,
       p_to_email: email,
-      p_subject: "Documento de desistimiento firmado",
+      p_subject: meta.subject,
       p_body: "Caso encolado desde formulario web.",
       p_webhook_url: webhook
     });
@@ -1863,7 +2078,9 @@ async function encolarCorreo() {
 
     setLoadingStep("Enviando webhook...", 92);
     const payload = {
-      event: "firma_documento_encolado",
+      event: meta.event,
+      contract_kind: getContractKind(),
+      contract_label: contratoTipo?.selectedOptions?.[0]?.textContent || getContractKind(),
       case_id: remoteCaseId,
       public_token: remotePublicToken,
       to_email: email,
@@ -1929,6 +2146,12 @@ if (sentModal) {
   });
 }
 
+if (authModal) {
+  authModal.addEventListener("click", (ev) => {
+    if (ev.target === authModal) cerrarModalAuth();
+  });
+}
+
 async function generarPdfYSubir(descargarArchivo = false) {
   if (!documentoGenerado) return false;
   const element = document.getElementById("documento");
@@ -1953,7 +2176,7 @@ async function generarPdfYSubir(descargarArchivo = false) {
     await uploadPdfToStorage(pdfBlob);
 
     if (descargarArchivo) {
-      pdf.save("DESISTIMIENTO.pdf");
+      pdf.save(getContractMeta().pdfName);
     }
     return true;
   } catch (_) {
@@ -1979,12 +2202,22 @@ if (remoteCaseId && remotePublicToken) {
 }
 
 renderAuthGate();
+enforceNumericFields();
 updatePreview(false);
 initAuth();
 initContractSwitcher();
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
 
 
 
