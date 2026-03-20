@@ -1,0 +1,1995 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desistimiento</title>
+<link rel="icon" href="data:,">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #081a33;
+  --bg-2: #0b2345;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #dbe7f7;
+  --brand: #123a78;
+  --brand-2: #1d4f9a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% 8%, rgba(79, 126, 208, 0.24), transparent 38%),
+    radial-gradient(circle at 90% 88%, rgba(44, 95, 179, 0.24), transparent 42%),
+    linear-gradient(135deg, var(--bg), var(--bg-2));
+}
+
+.app {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(4, 16, 35, 0.35);
+}
+
+.panel {
+  padding: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2.35rem;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  color: #0b2a55;
+}
+
+.sub {
+  margin: 10px 0 18px;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.step-dot {
+  border: 1px solid #d6bea4;
+  background: #f9efe3;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #7b6757;
+  padding: 8px 6px;
+}
+
+.step-dot.active {
+  background: #203145;
+  border-color: #203145;
+  color: #fff;
+}
+
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+label {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 0.83rem;
+  font-weight: 800;
+  color: #3b4757;
+}
+
+input, select {
+  width: 100%;
+  border: 1px solid #d2bba2;
+  border-radius: 11px;
+  padding: 12px;
+  min-height: 48px;
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--brand-2);
+  box-shadow: 0 0 0 3px rgba(31, 111, 102, 0.18);
+}
+
+.sig-box {
+  margin-top: 10px;
+  border: 1px dashed #c8af95;
+  border-radius: 11px;
+  background: #fff;
+}
+
+canvas {
+  width: 100%;
+  height: 150px;
+  display: block;
+  border-radius: 11px;
+  touch-action: none;
+}
+
+.btn-row {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-main { background: linear-gradient(135deg, #cb5722, #a13a13); color: #fff; }
+.btn-alt { background: linear-gradient(135deg, #2a8077, #225f59); color: #fff; }
+.btn-soft { background: #f1e2d1; color: #66452f; }
+
+.state {
+  min-height: 19px;
+  margin-top: 8px;
+  font-size: 0.87rem;
+  color: #7a3114;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.auth-box {
+  border: 1px solid #e1c8af;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.auth-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.auth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.auth-panel {
+  border: 1px solid #ecd8c2;
+  border-radius: 10px;
+  background: #fffaf5;
+  padding: 12px;
+}
+
+.auth-panel h4 {
+  margin: 0 0 10px;
+  font-size: 0.98rem;
+}
+
+.auth-panel input {
+  min-height: 52px;
+}
+
+.auth-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.auth-status {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.auth-message {
+  margin-top: 8px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e6c7ab;
+  background: #fff4e8;
+  color: #7a3114;
+}
+
+.auth-message.ok {
+  border-color: #bfe3ce;
+  background: #edf9f2;
+  color: #1f6d43;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.login-only-note {
+  margin-top: 10px;
+  font-size: 0.86rem;
+  color: #7c4a2d;
+  background: #fff4e8;
+  border: 1px solid #ecc9aa;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.contract-switch {
+  margin-bottom: 12px;
+  border: 1px solid #cfe0f7;
+  background: #f7fbff;
+  border-radius: 10px;
+  padding: 10px;
+  display: none;
+}
+
+.contract-switch h4 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.mobile-preview-toggle {
+  display: none;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 20, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9999;
+}
+
+.modal-backdrop.show {
+  display: flex;
+}
+
+.modal {
+  width: min(760px, 96vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: #fff9f2;
+  border: 1px solid #e2cab0;
+  border-radius: 14px;
+  box-shadow: 0 24px 45px rgba(16, 18, 26, 0.35);
+  padding: 14px;
+}
+
+.modal h3 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.modal-summary {
+  border: 1px solid #dfc6ad;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+
+.modal-summary p {
+  margin: 0 0 7px;
+}
+
+.loading-modal {
+  width: min(520px, 94vw);
+  background: #ffffff;
+  border: 1px solid #d7e5f8;
+  border-radius: 14px;
+  box-shadow: 0 24px 45px rgba(16, 18, 26, 0.35);
+  padding: 16px;
+}
+
+.loading-title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #163b73;
+}
+
+.loading-text {
+  margin: 0 0 8px;
+  color: #3d5272;
+  font-size: 0.9rem;
+}
+
+.loading-progress {
+  margin: 0 0 10px;
+  color: #163b73;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.loading-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e6eefb;
+  overflow: hidden;
+}
+
+.loading-bar > span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(135deg, #1f4b92, #2a67c0);
+  transition: width .28s ease;
+}
+
+.page {
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  padding: 10mm 14mm 10mm;
+  box-shadow: inset 0 0 0 1px #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-header { margin-bottom: 7mm; }
+.doc-logo { width: 116px; display: block; }
+.doc-watermark {
+  position: absolute;
+  width: 66%;
+  left: 50%;
+  top: 57%;
+  transform: translate(-50%, -50%);
+  opacity: 0.11;
+  pointer-events: none;
+}
+
+auto-space { letter-spacing: 0.01em; }
+
+.doc-body {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+h2 {
+  margin: 0 0 8mm;
+  font-family: Arial, sans-serif;
+  font-size: 16pt;
+  text-align: center;
+}
+
+.doc-texto p {
+  margin: 0 0 5.2mm;
+  font-family: Arial, sans-serif;
+  font-size: 10.3pt;
+  line-height: 1.5;
+  text-align: justify;
+}
+
+.line {
+  display: inline-block;
+  border-bottom: 1px solid #111;
+  min-height: 0.95em;
+  line-height: 1.1;
+  padding: 0 1px;
+}
+
+.firma {
+  margin-top: 5mm;
+  font-family: Arial, sans-serif;
+  font-size: 10.3pt;
+}
+
+#firmaImg, #firmaConductorImg {
+  display: block;
+  width: 160px;
+  min-height: 28px;
+}
+
+.firma-linea {
+  width: 78mm;
+  border-top: 1px solid #1f1f1f;
+  margin: 6mm 0 2mm;
+}
+
+.firma-rol { margin: 4mm 0 6mm; }
+
+.doc-footer {
+  margin-top: auto;
+  padding-top: 3mm;
+  border-top: 1px solid #9db2cf;
+  z-index: 2;
+}
+
+.footer-fallback {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #8d8d8d;
+  font-size: 8.6pt;
+}
+
+.footer-fallback strong { font-size: 9.4pt; }
+
+@media (max-width: 1080px) {
+  .app { grid-template-columns: 1fr; }
+  .page {
+    width: 100%;
+    height: auto;
+    min-height: 1180px;
+  }
+}
+
+@media (max-width: 430px) {
+  body {
+    background: #f0dfcb;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app {
+    padding: 10px 10px calc(14px + env(safe-area-inset-bottom));
+    gap: 10px;
+  }
+  .panel { padding: 14px; border-radius: 14px; }
+  h1 { font-size: 1.55rem; }
+  .sub { font-size: 0.88rem; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .auth-grid { grid-template-columns: 1fr; }
+  .stepper {
+    grid-template-columns: repeat(4, minmax(102px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .step-dot {
+    white-space: nowrap;
+    font-size: 0.72rem;
+    padding: 7px 5px;
+  }
+  label {
+    font-size: 0.8rem;
+    margin-top: 8px;
+  }
+  input, select {
+    min-height: 50px;
+    padding: 12px;
+    border-radius: 10px;
+  }
+  canvas {
+    height: 132px;
+  }
+  button { flex: 1 1 100%; }
+  .mobile-preview-toggle {
+    display: block;
+  }
+  .preview-card {
+    display: none;
+  }
+  .preview-card.show {
+    display: block;
+  }
+  .page {
+    width: 100%;
+    height: auto;
+    min-height: 900px;
+    padding: 12px;
+  }
+  .doc-logo { width: 106px; }
+}
+
+/* ---- Navy Web Redesign Overrides ---- */
+body {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(71, 123, 216, 0.22), transparent 36%),
+    radial-gradient(circle at 86% 90%, rgba(40, 89, 170, 0.22), transparent 38%),
+    linear-gradient(135deg, #081a33, #0a2242) !important;
+}
+
+.app {
+  max-width: 1420px !important;
+  padding: 26px !important;
+  grid-template-columns: 470px 1fr !important;
+  gap: 20px !important;
+  align-items: start;
+}
+
+.card {
+  border: 1px solid #d8e5f8 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 18px 44px rgba(5, 18, 42, 0.34) !important;
+}
+
+.panel {
+  padding: 22px !important;
+}
+
+h1 {
+  color: #0f2f60 !important;
+  font-size: 2.35rem !important;
+}
+
+.sub {
+  color: #4b5d77 !important;
+  font-size: 1rem !important;
+}
+
+.step-dot {
+  border-color: #bdd3f4 !important;
+  background: #edf4ff !important;
+  color: #28436b !important;
+}
+
+.step-dot.active {
+  background: linear-gradient(135deg, #174589, #113669) !important;
+  border-color: #113669 !important;
+  color: #fff !important;
+}
+
+input, select {
+  border: 1px solid #c8daf3 !important;
+}
+
+input:focus, select:focus {
+  border-color: #1e4e97 !important;
+  box-shadow: 0 0 0 3px rgba(30, 78, 151, 0.16) !important;
+}
+
+.btn-main {
+  background: linear-gradient(135deg, #1e4f99, #133a72) !important;
+}
+
+.btn-alt {
+  background: linear-gradient(135deg, #2a67c0, #194b97) !important;
+}
+
+.btn-soft {
+  background: #e9f1ff !important;
+  color: #103566 !important;
+}
+
+.auth-box {
+  border: 1px solid #cfdef5 !important;
+}
+
+.auth-panel {
+  border: 1px solid #d8e6fa !important;
+  background: #f5f9ff !important;
+}
+
+.auth-message,
+.login-only-note {
+  border-color: #c8dcfa !important;
+  background: #edf5ff !important;
+  color: #123a72 !important;
+}
+
+.app.auth-locked {
+  grid-template-columns: minmax(420px, 680px) !important;
+  justify-content: center;
+}
+
+.app.auth-locked .preview-card {
+  display: none !important;
+}
+
+@media (max-width: 430px) {
+  body {
+    background: linear-gradient(180deg, #081a33, #0b2446) !important;
+  }
+}
+
+/* ---- Responsive Fixes (Tablet + Mobile) ---- */
+@media (max-width: 1024px) {
+  .app {
+    grid-template-columns: 1fr !important;
+    max-width: 960px !important;
+    padding: 16px !important;
+    gap: 14px !important;
+  }
+
+  .panel {
+    padding: 16px !important;
+  }
+
+  .preview-card {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .page {
+    width: 100%;
+    min-height: 980px;
+    height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.95rem !important;
+    line-height: 1.08;
+  }
+
+  .sub {
+    font-size: 0.92rem !important;
+    margin-bottom: 14px;
+  }
+
+  .auth-grid,
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .stepper {
+    grid-template-columns: repeat(4, minmax(110px, 1fr));
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+
+  .step-dot {
+    white-space: nowrap;
+  }
+
+  .btn-row {
+    gap: 10px;
+  }
+
+  .btn-row > button {
+    flex: 1 1 calc(50% - 10px);
+    min-height: 46px;
+  }
+
+  input,
+  select {
+    min-height: 50px;
+    font-size: 16px;
+  }
+
+  canvas {
+    height: 170px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    background: linear-gradient(180deg, #081a33, #0b2446) !important;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .app {
+    padding: 10px 10px calc(14px + env(safe-area-inset-bottom)) !important;
+    gap: 10px !important;
+  }
+
+  .card {
+    border-radius: 14px !important;
+  }
+
+  .panel {
+    padding: 12px !important;
+  }
+
+  h1 {
+    font-size: 1.7rem !important;
+  }
+
+  label {
+    font-size: 0.82rem;
+    margin-top: 8px;
+  }
+
+  .btn-row > button {
+    flex: 1 1 100%;
+    min-height: 48px;
+  }
+
+  .mobile-preview-toggle {
+    display: block;
+  }
+
+  .preview-card {
+    display: none;
+  }
+
+  .preview-card.show {
+    display: block;
+  }
+
+  .page {
+    min-height: 900px;
+    padding: 12px;
+  }
+
+  .doc-logo {
+    width: 102px;
+  }
+
+  .loading-modal,
+  .modal {
+    width: 96vw;
+    max-height: 88vh;
+  }
+}
+</style>
+</head>
+<body>
+<main class="app container-xxl">
+  <section class="card panel">
+    <h1>Formato de<br>Desistimiento</h1>
+    <p class="sub">Asistente paso a paso para completar y firmar el documento.</p>
+
+    <div class="contract-switch">
+      <h4>Tipo de contrato</h4>
+      <select id="contratoTipo" class="no-sync" onchange="switchContractType()">
+        <option value="desistimiento">Desistimiento</option>
+        <option value="afavor">Contrato A Favor</option>
+        <option value="encontra">Contrato En Contra</option>
+        <option value="mutuo">Contrato Mutuo Acuerdo</option>
+      </select>
+    </div>
+
+    <div class="auth-box">
+      <p class="auth-title">Acceso de usuario</p>
+      <div class="auth-grid" id="authGrid">
+        <div class="auth-panel">
+          <h4>Iniciar sesión</h4>
+          <input class="no-sync" id="authLoginEmail" type="email" placeholder="correo@dominio.com">
+          <input class="no-sync" id="authLoginPassword" type="password" placeholder="Contraseña">
+          <div class="auth-actions">
+            <button class="btn-main" onclick="iniciarSesion()">Ingresar</button>
+          </div>
+        </div>
+        <div class="auth-panel">
+          <h4>Crear usuario</h4>
+          <input class="no-sync" id="authRegisterEmail" type="email" placeholder="correo@dominio.com">
+          <input class="no-sync" id="authRegisterPassword" type="password" placeholder="Contraseña">
+          <div class="auth-actions">
+            <button class="btn-soft" onclick="registrarUsuario()">Crear usuario</button>
+          </div>
+        </div>
+      </div>
+      <div class="auth-actions" id="authLogoutWrap">
+        <button class="btn-soft" onclick="cerrarSesion()">Salir</button>
+      </div>
+      <div id="authStatus" class="auth-status">No autenticado.</div>
+      <div id="authMessage" class="auth-message hidden"></div>
+      <div id="loginOnlyNote" class="login-only-note">Inicia sesión para ver y usar las funcionalidades del formulario.</div>
+    </div>
+
+    <div id="appProtectedLeft">
+    <div class="stepper" id="stepper">
+      <div class="step-dot active">1. Datos</div>
+      <div class="step-dot">2. Hechos</div>
+      <div class="step-dot">3. Firmas</div>
+      <div class="step-dot">4. PDF</div>
+    </div>
+
+    <div class="step-panel active" data-step="0">
+      <label for="tipo">Tipo de compareciente</label>
+      <select id="tipo">
+        <option value="adulto">Mayor de edad</option>
+        <option value="menor">Representante de menor</option>
+      </select>
+
+      <div class="grid-2">
+        <div>
+          <label for="nombre">Nombre completo</label>
+          <input id="nombre" placeholder="Ej. Juan Perez">
+        </div>
+        <div>
+          <label for="cedula">Cedula</label>
+          <input id="cedula" placeholder="Ej. 123456789">
+        </div>
+      </div>
+
+      <div id="menorFields" style="display:none;">
+        <div class="grid-2">
+          <div>
+            <label for="nombreMenor">Nombre del menor</label>
+            <input id="nombreMenor" placeholder="Nombre del menor">
+          </div>
+          <div>
+            <label for="docMenor">Documento del menor</label>
+            <input id="docMenor" placeholder="Documento">
+          </div>
+        </div>
+        <label for="parentesco">Parentesco</label>
+        <input id="parentesco" placeholder="Ej. Madre, padre, tutor">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-main" onclick="nextStep()">Siguiente</button>
+      </div>
+    </div>
+
+    <div class="step-panel" data-step="1">
+      <div class="grid-2">
+        <div>
+          <label for="implicado">Implicado</label>
+          <input id="implicado" placeholder="Nombre del implicado">
+        </div>
+        <div>
+          <label for="cedulaImp">Cedula del implicado</label>
+          <input id="cedulaImp" placeholder="Cedula">
+        </div>
+      </div>
+
+      <label for="fecha">Fecha del incidente</label>
+      <input id="fecha" type="date">
+
+      <div class="grid-2">
+        <div>
+          <label for="placa">Placa</label>
+          <input id="placa" placeholder="Ej. ABC123">
+        </div>
+        <div>
+          <label for="interno">Numero interno</label>
+          <input id="interno" placeholder="Ej. 45">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-soft" onclick="prevStep()">Atras</button>
+        <button class="btn-main" onclick="nextStep()">Siguiente</button>
+      </div>
+    </div>
+
+    <div class="step-panel" data-step="2">
+      <div class="grid-2">
+        <div>
+          <label for="conductorNombre">Nombre del conductor</label>
+          <input id="conductorNombre" placeholder="Nombre completo">
+        </div>
+        <div>
+          <label for="conductorCedula">Cedula del conductor</label>
+          <input id="conductorCedula" placeholder="Cedula">
+        </div>
+      </div>
+
+      <label for="firma">Firma compareciente</label>
+      <div class="sig-box"><canvas id="firma"></canvas></div>
+
+      <label for="firmaConductor">Firma del conductor</label>
+      <div class="sig-box"><canvas id="firmaConductor"></canvas></div>
+
+      <div class="btn-row">
+        <button class="btn-soft" onclick="limpiarFirma()">Limpiar firmas</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-soft" onclick="prevStep()">Atras</button>
+        <button class="btn-main" onclick="nextStep()">Siguiente</button>
+      </div>
+    </div>
+
+    <div class="step-panel" data-step="3">
+      <div class="btn-row">
+        <button class="btn-soft" onclick="prevStep()">Atras</button>
+        <button class="btn-main" onclick="confirmarDatos()">Confirmar datos</button>
+        <button class="btn-alt" onclick="descargarPDF()">Descargar PDF</button>
+      </div>
+      <label for="emailDestino">Correo destino</label>
+      <input id="emailDestino" type="email" placeholder="correo@dominio.com">
+      <div class="btn-row">
+        <button class="btn-soft" onclick="encolarCorreo()">Enviar</button>
+      </div>
+      <div class="btn-row mobile-preview-toggle">
+        <button class="btn-soft" id="togglePreviewBtn" onclick="togglePreview()">Ver vista previa</button>
+      </div>
+      <div id="estado" class="state"></div>
+      <div id="estadoCloud" class="hint"></div>
+      <p class="hint">Consejo: genera primero para actualizar la vista previa y luego descarga el PDF.</p>
+    </div>
+    </div>
+  </section>
+
+  <section class="card panel preview-card" id="previewCard">
+    <div id="documento" class="page">
+      <div class="doc-header">
+        <img class="doc-logo" src="./soluasistencia.png" alt="Logo Soluasistencia">
+      </div>
+      <img class="doc-watermark" src="./soluasistencia.png" alt="">
+
+      <div class="doc-body">
+        <h2>DESISTIMIENTO:</h2>
+        <div id="texto" class="doc-texto"></div>
+
+        <div class="firma">
+          Cordialmente,
+          <img id="firmaImg" alt="Firma compareciente">
+          <div class="firma-linea"></div>
+          C.C. <span id="firmaCedula"></span>
+
+          <div class="firma-rol">Conductor</div>
+          <img id="firmaConductorImg" alt="Firma conductor">
+          <div class="firma-linea"></div>
+          Nombre: <span id="firmaConductorNombre"></span><br>
+          C.C. <span id="firmaConductorCedula"></span>
+        </div>
+      </div>
+
+      <div class="doc-footer">
+        <div class="footer-fallback">
+          <span>☎</span>
+          <span><strong>322-44-84</strong> Carrera 43A #16A SUR-38, Edif. Danzas, Of.708 (El Poblado)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="modal">
+    <h3 id="confirmTitle">Confirmar datos ingresados</h3>
+    <div id="confirmSummary" class="modal-summary"></div>
+    <div class="btn-row" style="margin-top: 10px;">
+      <button class="btn-soft" onclick="cerrarModalConfirmacion()">Editar datos</button>
+      <button class="btn-main" onclick="generarDesdeModal()">Confirmar y generar documento</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="loadingModal" role="dialog" aria-modal="true" aria-labelledby="loadingTitle">
+  <div class="loading-modal">
+    <h3 class="loading-title" id="loadingTitle">Procesando envío</h3>
+    <p class="loading-text" id="loadingStepText">Iniciando...</p>
+    <p class="loading-progress" id="loadingProgressText">0% completado</p>
+    <div class="loading-bar"><span id="loadingBarFill"></span></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="sentModal" role="dialog" aria-modal="true" aria-labelledby="sentTitle">
+  <div class="modal">
+    <h3 id="sentTitle">Envío completado</h3>
+    <div id="sentSummary" class="modal-summary"></div>
+    <div class="btn-row" style="margin-top: 10px;">
+      <button class="btn-alt hidden" id="sentDownloadBtn" onclick="abrirDescargaEnviada()">Abrir documento</button>
+      <button class="btn-main" onclick="cerrarModalEnviado()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const panels = Array.from(document.querySelectorAll(".step-panel"));
+const dots = Array.from(document.querySelectorAll(".step-dot"));
+const previewCard = document.getElementById("previewCard");
+const togglePreviewBtn = document.getElementById("togglePreviewBtn");
+const confirmModal = document.getElementById("confirmModal");
+const confirmSummary = document.getElementById("confirmSummary");
+const loadingModal = document.getElementById("loadingModal");
+const loadingStepText = document.getElementById("loadingStepText");
+const loadingBarFill = document.getElementById("loadingBarFill");
+const loadingProgressText = document.getElementById("loadingProgressText");
+const sentModal = document.getElementById("sentModal");
+const sentSummary = document.getElementById("sentSummary");
+const sentDownloadBtn = document.getElementById("sentDownloadBtn");
+const estadoCloud = document.getElementById("estadoCloud");
+const authStatus = document.getElementById("authStatus");
+const authMessage = document.getElementById("authMessage");
+const authGrid = document.getElementById("authGrid");
+const authLogoutWrap = document.getElementById("authLogoutWrap");
+const appProtectedLeft = document.getElementById("appProtectedLeft");
+const loginOnlyNote = document.getElementById("loginOnlyNote");
+const appMain = document.querySelector("main.app");
+const contratoTipo = document.getElementById("contratoTipo");
+let currentStep = 0;
+
+const SUPABASE_URL = "https://nbdacyepdjamgqoibtuv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2P3PFpeh5EaJZqWfDHGXSA_hDoA9VRv";
+const DEFAULT_WEBHOOK_URL = "https://connect.pabbly.com/workflow/sendwebhookdata/IjU3NjcwNTZmMDYzMjA0MzA1MjZkNTUzNjUxMzci_pc";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let remoteCaseId = localStorage.getItem("firma_case_id") || null;
+let remotePublicToken = localStorage.getItem("firma_public_token") || null;
+let remoteSaveTimer = null;
+let latestPdfBase64 = null;
+let latestPdfSha256 = null;
+let latestPdfStoragePath = null;
+let latestDownloadUrl = null;
+let currentUser = null;
+
+const canvas = document.getElementById("firma");
+const canvasConductor = document.getElementById("firmaConductor");
+const signaturePad = new SignaturePad(canvas, { penColor: "rgb(24,24,24)" });
+const signaturePadConductor = new SignaturePad(canvasConductor, { penColor: "rgb(24,24,24)" });
+
+const estado = document.getElementById("estado");
+let documentoGenerado = false;
+
+document.getElementById("tipo").addEventListener("change", function () {
+  document.getElementById("menorFields").style.display = this.value === "menor" ? "block" : "none";
+  updatePreview(false);
+  queueRemoteSave();
+});
+
+document.querySelectorAll("input:not(.no-sync), select").forEach((el) => {
+  el.addEventListener("input", () => {
+    updatePreview(false);
+    queueRemoteSave();
+  });
+  el.addEventListener("change", () => {
+    updatePreview(false);
+    queueRemoteSave();
+  });
+});
+
+signaturePad.onEnd = () => {
+  updatePreview(false);
+  queueRemoteSave();
+};
+signaturePadConductor.onEnd = () => {
+  updatePreview(false);
+  queueRemoteSave();
+};
+
+function showStep(index) {
+  currentStep = Math.max(0, Math.min(index, panels.length - 1));
+  panels.forEach((p, i) => p.classList.toggle("active", i === currentStep));
+  dots.forEach((d, i) => d.classList.toggle("active", i === currentStep));
+
+  // Recalcula canvas al abrir el paso de firmas para evitar tamano 0 en movil.
+  if (currentStep === 2) {
+    requestAnimationFrame(() => {
+      resizeCanvas();
+      if (window.innerWidth <= 430 && previewCard && !previewCard.classList.contains("show")) {
+        previewCard.classList.add("show");
+        if (togglePreviewBtn) togglePreviewBtn.textContent = "Ocultar vista previa";
+      }
+    });
+  }
+}
+
+function nextStep() {
+  if (!validateStep(currentStep)) return;
+  showStep(currentStep + 1);
+}
+
+function prevStep() {
+  showStep(currentStep - 1);
+}
+
+function togglePreview() {
+  if (!previewCard) return;
+  const showing = previewCard.classList.toggle("show");
+  if (togglePreviewBtn) {
+    togglePreviewBtn.textContent = showing ? "Ocultar vista previa" : "Ver vista previa";
+  }
+}
+
+function setEstado(msg, error = true) {
+  estado.style.color = error ? "#7a3114" : "#1f6d43";
+  estado.textContent = msg;
+}
+
+function initContractSwitcher() {
+  if (!contratoTipo) return;
+  contratoTipo.value = "desistimiento";
+}
+
+function switchContractType() {
+  if (!contratoTipo) return;
+  contratoTipo.value = "desistimiento";
+}
+
+function showLoadingModal(show) {
+  if (!loadingModal) return;
+  loadingModal.classList.toggle("show", Boolean(show));
+}
+
+function setLoadingStep(text, progressPercent) {
+  const pct = Math.max(0, Math.min(progressPercent || 0, 100));
+  if (loadingStepText) loadingStepText.textContent = text || "";
+  if (loadingBarFill) loadingBarFill.style.width = `${pct}%`;
+  if (loadingProgressText) loadingProgressText.textContent = `${Math.round(pct)}% completado`;
+}
+
+function showSendResultModal(title, summaryHtml, downloadUrl) {
+  if (sentSummary) sentSummary.innerHTML = summaryHtml || "";
+  if (sentDownloadBtn) {
+    sentDownloadBtn.dataset.url = downloadUrl || "";
+    sentDownloadBtn.classList.toggle("hidden", !downloadUrl);
+  }
+  const sentTitle = document.getElementById("sentTitle");
+  if (sentTitle) sentTitle.textContent = title || "Envío completado";
+  if (sentModal) sentModal.classList.add("show");
+}
+
+function abrirDescargaEnviada() {
+  const url = sentDownloadBtn?.dataset?.url;
+  if (url) window.open(url, "_blank", "noopener");
+}
+
+function cerrarModalEnviado() {
+  if (sentModal) sentModal.classList.remove("show");
+}
+
+function resetFormularioDespuesEnvio() {
+  document.querySelectorAll("input:not(.no-sync), select:not(.no-sync), textarea:not(.no-sync)").forEach((el) => {
+    if (el.type === "checkbox" || el.type === "radio") {
+      el.checked = false;
+      return;
+    }
+    if (el.tagName === "SELECT") {
+      el.selectedIndex = 0;
+      return;
+    }
+    el.value = "";
+  });
+  if (signaturePad) signaturePad.clear();
+  if (signaturePadConductor) signaturePadConductor.clear();
+  documentoGenerado = false;
+  latestPdfBase64 = null;
+  latestPdfSha256 = null;
+  latestPdfStoragePath = null;
+  latestDownloadUrl = null;
+  remoteCaseId = null;
+  remotePublicToken = null;
+  localStorage.removeItem("firma_case_id");
+  localStorage.removeItem("firma_public_token");
+  showStep(0);
+  updatePreview(false);
+  setEstado("Formulario limpiado. Puedes iniciar un nuevo caso.", false);
+  setEstadoCloud("");
+}
+
+function updateAuthStatus() {
+  if (!authStatus) return;
+  if (currentUser) {
+    authStatus.textContent = `Autenticado: ${currentUser.email}`;
+  } else {
+    authStatus.textContent = "No autenticado.";
+  }
+  renderAuthGate();
+}
+
+function setAuthMessage(msg, ok = false) {
+  if (!authMessage) return;
+  if (!msg) {
+    authMessage.classList.add("hidden");
+    authMessage.classList.remove("ok");
+    authMessage.textContent = "";
+    return;
+  }
+  authMessage.classList.remove("hidden");
+  authMessage.classList.toggle("ok", ok);
+  authMessage.textContent = msg;
+}
+
+function renderAuthGate() {
+  const isAuthed = Boolean(currentUser);
+  if (appProtectedLeft) appProtectedLeft.classList.toggle("hidden", !isAuthed);
+  if (previewCard) previewCard.classList.toggle("hidden", !isAuthed);
+  if (loginOnlyNote) loginOnlyNote.classList.toggle("hidden", isAuthed);
+  if (authGrid) authGrid.classList.toggle("hidden", isAuthed);
+  if (authLogoutWrap) authLogoutWrap.classList.toggle("hidden", !isAuthed);
+  if (appMain) appMain.classList.toggle("auth-locked", !isAuthed);
+}
+
+function requireAuth() {
+  if (!currentUser) {
+    setEstado("Debes iniciar sesion para continuar.");
+    return false;
+  }
+  return true;
+}
+
+async function initAuth() {
+  const { data } = await sb.auth.getSession();
+  currentUser = data?.session?.user || null;
+  updateAuthStatus();
+  sb.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user || null;
+    updateAuthStatus();
+  });
+}
+
+async function registrarUsuario() {
+  const email = valor("authRegisterEmail");
+  const password = valor("authRegisterPassword");
+  if (!email || !password) {
+    setAuthMessage("Ingresa correo y contraseña para crear usuario.");
+    setEstado("Ingresa correo y contraseña para crear usuario.");
+    return;
+  }
+  const { error } = await sb.auth.signUp({ email, password });
+  if (error) {
+    setAuthMessage(`No se pudo crear usuario: ${sbErr(error)}`);
+    setEstado(`No se pudo crear usuario: ${sbErr(error)}`);
+    return;
+  }
+
+  // Si la confirmacion de email esta desactivada en Supabase, inicia sesion de inmediato.
+  const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({ email, password });
+  if (!loginError && loginData?.user) {
+    currentUser = loginData.user;
+    updateAuthStatus();
+    setAuthMessage("Usuario creado y sesión iniciada correctamente.", true);
+    setEstado("Usuario creado y sesión iniciada.", false);
+    return;
+  }
+
+  setAuthMessage("Usuario creado. Si no inicia sesión automáticamente, ingresa con tus credenciales.", true);
+  setEstado("Usuario creado.", false);
+}
+
+async function iniciarSesion() {
+  const email = valor("authLoginEmail");
+  const password = valor("authLoginPassword");
+  if (!email || !password) {
+    setAuthMessage("Ingresa correo y contraseña para iniciar sesión.");
+    setEstado("Ingresa correo y contraseña.");
+    return;
+  }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    let msg = `No se pudo iniciar sesion: ${sbErr(error)}`;
+    if ((error.message || "").toLowerCase().includes("invalid login credentials")) {
+      msg = "Credenciales inválidas. Verifica correo/contraseña o confirma el correo en Supabase.";
+    }
+    if ((error.message || "").toLowerCase().includes("email not confirmed")) {
+      msg = "Correo no confirmado. Abre el email de confirmación y vuelve a intentar.";
+    }
+    setAuthMessage(msg);
+    setEstado(msg);
+    return;
+  }
+  currentUser = data?.user || null;
+  updateAuthStatus();
+  setAuthMessage("Sesión iniciada correctamente.", true);
+  setEstado("Sesion iniciada correctamente.", false);
+}
+
+async function cerrarSesion() {
+  await sb.auth.signOut();
+  currentUser = null;
+  updateAuthStatus();
+  setAuthMessage("Sesión cerrada.");
+  setEstado("Sesion cerrada.");
+}
+
+function valor(id) {
+  const el = document.getElementById(id);
+  return el ? (el.value || "").trim() : "";
+}
+
+function setEstadoCloud(msg) {
+  if (estadoCloud) estadoCloud.textContent = msg || "";
+}
+
+function sbErr(error) {
+  if (!error) return "Error desconocido";
+  const code = error.code ? ` [${error.code}]` : "";
+  const hint = error.hint ? ` | ${error.hint}` : "";
+  return `${error.message || "Error"}${code}${hint}`;
+}
+
+function guardarIdentidadLocal() {
+  if (remoteCaseId && remotePublicToken) {
+    localStorage.setItem("firma_case_id", remoteCaseId);
+    localStorage.setItem("firma_public_token", remotePublicToken);
+  }
+}
+
+function getSnapshot() {
+  return {
+    tipo: valor("tipo"),
+    nombre: valor("nombre"),
+    cedula: valor("cedula"),
+    nombreMenor: valor("nombreMenor"),
+    docMenor: valor("docMenor"),
+    parentesco: valor("parentesco"),
+    implicado: valor("implicado"),
+    cedulaImp: valor("cedulaImp"),
+    fecha: valor("fecha"),
+    placa: valor("placa"),
+    interno: valor("interno"),
+    conductorNombre: valor("conductorNombre"),
+    conductorCedula: valor("conductorCedula"),
+    emailDestino: valor("emailDestino"),
+    firmaCompareciente: !signaturePad.isEmpty(),
+    firmaConductor: !signaturePadConductor.isEmpty()
+  };
+}
+
+async function sha256Hex(input) {
+  const enc = new TextEncoder().encode(input);
+  const hashBuf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function queueRemoteSave() {
+  clearTimeout(remoteSaveTimer);
+  remoteSaveTimer = setTimeout(() => {
+    saveDraftToSupabase().catch(() => {});
+  }, 700);
+}
+
+async function initRemoteCaseIfNeeded(docHtml) {
+  if (remoteCaseId && remotePublicToken) return true;
+  const { data, error } = await sb.rpc("firma_init_case", {
+    p_form_data: getSnapshot(),
+    p_doc_html: docHtml || null
+  });
+  if (error) {
+    setEstadoCloud(`No se pudo iniciar caso en nube: ${sbErr(error)}`);
+    return false;
+  }
+  if (data && data.length > 0) {
+    remoteCaseId = data[0].case_id;
+    remotePublicToken = data[0].public_token;
+    guardarIdentidadLocal();
+    setEstadoCloud("Caso sincronizado en Supabase.");
+    return true;
+  }
+  setEstadoCloud("Respuesta vacia al iniciar caso.");
+  return false;
+}
+
+async function saveDraftToSupabase() {
+  const docHtml = document.getElementById("texto").innerHTML || null;
+  const okInit = await initRemoteCaseIfNeeded(docHtml);
+  if (!okInit) return false;
+  const { data, error } = await sb.rpc("firma_save_draft", {
+    p_case_id: remoteCaseId,
+    p_public_token: remotePublicToken,
+    p_form_data: getSnapshot(),
+    p_doc_html: docHtml
+  });
+  if (error || data !== true) {
+    setEstadoCloud(`Error al guardar borrador en nube: ${sbErr(error)}`);
+    return false;
+  }
+  setEstadoCloud("Borrador guardado en nube.");
+  return true;
+}
+
+async function confirmCaseInSupabase() {
+  const okInit = await initRemoteCaseIfNeeded(document.getElementById("texto").innerHTML || null);
+  if (!okInit) return false;
+
+  const evidence = {
+    confirmedAt: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown",
+    form: getSnapshot()
+  };
+  const { data, error } = await sb.rpc("firma_confirm_case", {
+    p_case_id: remoteCaseId,
+    p_public_token: remotePublicToken,
+    p_pdf_sha256: latestPdfSha256,
+    p_evidence: evidence
+  });
+  if (error || data !== true) {
+    setEstadoCloud(`No se pudo confirmar en Supabase: ${sbErr(error)}`);
+    return false;
+  }
+  setEstadoCloud("Caso confirmado en Supabase.");
+  return true;
+}
+
+async function attachPdfToSupabase() {
+  if (!latestPdfBase64 || !latestPdfSha256) return false;
+  const okInit = await initRemoteCaseIfNeeded(document.getElementById("texto").innerHTML || null);
+  if (!okInit) return false;
+  const { data, error } = await sb.rpc("firma_attach_pdf", {
+    p_case_id: remoteCaseId,
+    p_public_token: remotePublicToken,
+    p_pdf_base64: latestPdfBase64,
+    p_pdf_sha256: latestPdfSha256
+  });
+  if (error || data !== true) {
+    setEstadoCloud(`No se pudo adjuntar PDF en Supabase: ${sbErr(error)}`);
+    return false;
+  }
+  setEstadoCloud("PDF adjuntado en Supabase.");
+  return true;
+}
+
+async function uploadPdfToStorage(pdfBlob) {
+  const okInit = await initRemoteCaseIfNeeded(document.getElementById("texto").innerHTML || null);
+  if (!okInit) return false;
+
+  const path = `${remoteCaseId}/${remotePublicToken}/desistimiento_${Date.now()}.pdf`;
+  const { error: upErr } = await sb.storage
+    .from("signed-documents")
+    .upload(path, pdfBlob, { contentType: "application/pdf", upsert: true });
+
+  if (upErr) {
+    setEstadoCloud(`Error subiendo PDF a storage: ${sbErr(upErr)}`);
+    return false;
+  }
+
+  const { data: signedData, error: signedErr } = await sb.storage
+    .from("signed-documents")
+    .createSignedUrl(path, 60 * 60 * 24 * 7);
+
+  if (signedErr || !signedData?.signedUrl) {
+    setEstadoCloud(`PDF subido, pero sin link firmado: ${sbErr(signedErr)}`);
+    latestPdfStoragePath = path;
+    latestDownloadUrl = null;
+  } else {
+    latestPdfStoragePath = path;
+    latestDownloadUrl = normalizeSignedUrl(signedData.signedUrl);
+    setEstadoCloud("PDF subido a Storage con link firmado.");
+  }
+
+  await sb.rpc("firma_set_pdf_storage_path", {
+    p_case_id: remoteCaseId,
+    p_public_token: remotePublicToken,
+    p_pdf_storage_path: path
+  });
+
+  return true;
+}
+
+function normalizeSignedUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return `${SUPABASE_URL}${url}`;
+  return `${SUPABASE_URL}/${url}`;
+}
+
+function formatSignedAtLocal(dateObj) {
+  try {
+    return new Intl.DateTimeFormat("es-CO", {
+      dateStyle: "full",
+      timeStyle: "long",
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Bogota"
+    }).format(dateObj);
+  } catch (_) {
+    return dateObj.toString();
+  }
+}
+
+function getGeolocationOnce(timeoutMs = 8000) {
+  return new Promise((resolve) => {
+    if (!("geolocation" in navigator)) {
+      resolve({ ok: false, reason: "geolocation_not_supported" });
+      return;
+    }
+    let done = false;
+    const timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      resolve({ ok: false, reason: "timeout" });
+    }, timeoutMs);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve({
+          ok: true,
+          latitude: Number(pos.coords.latitude).toFixed(6),
+          longitude: Number(pos.coords.longitude).toFixed(6),
+          accuracy_m: Math.round(pos.coords.accuracy || 0)
+        });
+      },
+      (err) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve({ ok: false, reason: err?.message || "location_error" });
+      },
+      { enableHighAccuracy: false, maximumAge: 120000, timeout: timeoutMs - 500 }
+    );
+  });
+}
+
+async function ensureDownloadUrl() {
+  if (latestDownloadUrl) return latestDownloadUrl;
+  if (!latestPdfStoragePath) return null;
+  const { data, error } = await sb.storage
+    .from("signed-documents")
+    .createSignedUrl(latestPdfStoragePath, 60 * 60 * 24 * 7);
+  if (error || !data?.signedUrl) {
+    setEstadoCloud(`No se pudo regenerar signed URL: ${sbErr(error)}`);
+    return null;
+  }
+  latestDownloadUrl = normalizeSignedUrl(data.signedUrl);
+  return latestDownloadUrl;
+}
+
+function validateStep(step) {
+  const rules = {
+    0: ["tipo", "nombre", "cedula"],
+    1: ["implicado", "cedulaImp", "fecha", "placa", "interno"],
+    2: ["conductorNombre", "conductorCedula"]
+  };
+
+  const need = rules[step] || [];
+  for (const id of need) {
+    if (!valor(id)) {
+      setEstado("Completa los campos del paso actual para continuar.");
+      return false;
+    }
+  }
+
+  if (step === 0 && valor("tipo") === "menor") {
+    for (const id of ["nombreMenor", "docMenor", "parentesco"]) {
+      if (!valor(id)) {
+        setEstado("Completa los datos del menor para continuar.");
+        return false;
+      }
+    }
+  }
+
+  if (step === 2) {
+    if (signaturePad.isEmpty()) {
+      setEstado("La firma del compareciente es obligatoria.");
+      return false;
+    }
+    if (signaturePadConductor.isEmpty()) {
+      setEstado("La firma del conductor es obligatoria.");
+      return false;
+    }
+  }
+
+  setEstado("");
+  return true;
+}
+
+function resizeCanvasElement(el, pad) {
+  const data = pad.isEmpty() ? null : pad.toData();
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  el.width = Math.floor(el.offsetWidth * ratio);
+  el.height = Math.floor(el.offsetHeight * ratio);
+  el.getContext("2d").scale(ratio, ratio);
+  pad.clear();
+  if (data) {
+    pad.fromData(data);
+  }
+}
+
+function resizeCanvas() {
+  resizeCanvasElement(canvas, signaturePad);
+  resizeCanvasElement(canvasConductor, signaturePadConductor);
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+function limpiarFirma() {
+  signaturePad.clear();
+  signaturePadConductor.clear();
+  documentoGenerado = false;
+  setEstado("Firmas limpiadas.");
+  updatePreview(false);
+  queueRemoteSave();
+}
+
+function getPartesFecha(fechaIso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fechaIso || "");
+  if (!m) return null;
+  return { anio: String(Number(m[1])), mes: String(Number(m[2])), dia: String(Number(m[3])) };
+}
+
+function escapeHtml(v) {
+  return String(v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function linea(v) {
+  const text = String(v || "");
+  const dynamic = Math.max(text.length + 1, 3);
+  return `<span class=\"line\" style=\"min-width:${dynamic}ch\">${escapeHtml(text)}</span>`;
+}
+
+function buildTexto(tipo, data) {
+  const { nombre, implicado, cedulaImp, dia, mes, anio, placa, interno, nombreMenor, docMenor, parentesco } = data;
+  if (tipo === "adulto") {
+    return `
+      <p>Yo, ${linea(nombre)} mayor de edad, identificado como aparece al pie de mi firma, mediante este escrito manifiesto que es mi voluntad libre y espontanea DESISTIR de toda asistencia medica o prehospitalaria, accion penal, civil, administrativa y contravencional en contra del senor ${linea(implicado)} mayor de edad, identificado con cedula de ciudadania No. ${linea(cedulaImp)}, por los hechos acaecidos en accidente de transito de fecha, dia ${linea(dia)} mes ${linea(mes)} ano ${linea(anio)}, en el que esta involucrado el vehiculo de placas ${linea(placa)} numero interno ${linea(interno)}; en consecuencia de igual forma desisto de toda accion penal, civil, administrativa y contravencional en contra de la entidad propietaria del vehiculo, empresa afiliadora, conductor y aseguradora.</p>
+      <p>Conforme a la Ley 906 de 2004 C.P.P., Art. 76. "En cualquier caso el desistimiento se hara extensivo a todos los autores o participes del delito investigado y una vez aceptado no admitira retractacion".</p>
+      <p>Para constancia de lo anterior, firmo libre y voluntariamente, hoy ${linea(dia)} de ${linea(mes)} de ${linea(anio)}.</p>
+    `;
+  }
+
+  return `
+    <p>Yo, ${linea(nombre)} mayor de edad, identificado(a) como aparece al pie de mi firma, y en calidad de representante del menor de edad ${linea(nombreMenor)} con documento ${linea(docMenor)} y parentesco ${linea(parentesco)}, mediante este escrito manifiesto que es mi voluntad libre y espontanea DESISTIR de toda asistencia medica o prehospitalaria, accion penal, civil, administrativa y contravencional en contra del senor ${linea(implicado)} mayor de edad, identificado con cedula de ciudadania No. ${linea(cedulaImp)}, por los hechos acaecidos en accidente de transito de fecha, dia ${linea(dia)} mes ${linea(mes)} ano ${linea(anio)}, en el que esta involucrado el vehiculo de placas ${linea(placa)} numero interno ${linea(interno)}; en consecuencia de igual forma desisto de toda accion penal, civil, administrativa y contravencional en contra de la entidad propietaria del vehiculo, empresa afiliadora, conductor y aseguradora.</p>
+    <p>Conforme a la Ley 906 de 2004 C.P.P., Art. 76. "En cualquier caso el desistimiento se hara extensivo a todos los autores o participes del delito investigado y una vez aceptado no admitira retractacion".</p>
+    <p>Para constancia de lo anterior, firmo libre y voluntariamente, hoy ${linea(dia)} de ${linea(mes)} de ${linea(anio)}.</p>
+  `;
+}
+
+function fmtFecha(fechaIso) {
+  const p = getPartesFecha(fechaIso);
+  if (!p) return "-";
+  return `${p.dia}/${p.mes}/${p.anio}`;
+}
+
+function getSiNo(ok) {
+  return ok ? "Si" : "No";
+}
+
+function updatePreview(strict = false) {
+  const tipo = valor("tipo");
+  const nombre = valor("nombre");
+  const cedula = valor("cedula");
+  const implicado = valor("implicado");
+  const cedulaImp = valor("cedulaImp");
+  const fecha = valor("fecha");
+  const placa = valor("placa");
+  const interno = valor("interno");
+  const conductorNombre = valor("conductorNombre");
+  const conductorCedula = valor("conductorCedula");
+
+  const partes = getPartesFecha(fecha);
+  const fechaValida = Boolean(partes);
+  if (!fechaValida && strict) {
+    setEstado("Selecciona una fecha valida.");
+    return false;
+  }
+
+  const dia = partes ? partes.dia : "";
+  const mes = partes ? partes.mes : "";
+  const anio = partes ? partes.anio : "";
+  const nombreMenor = valor("nombreMenor");
+  const docMenor = valor("docMenor");
+  const parentesco = valor("parentesco");
+
+  const texto = buildTexto(tipo, {
+    nombre, implicado, cedulaImp, dia, mes, anio, placa, interno,
+    nombreMenor, docMenor, parentesco
+  });
+
+  document.getElementById("texto").innerHTML = texto;
+  document.getElementById("firmaImg").src = signaturePad.isEmpty() ? "" : signaturePad.toDataURL("image/png");
+  document.getElementById("firmaConductorImg").src = signaturePadConductor.isEmpty() ? "" : signaturePadConductor.toDataURL("image/png");
+  document.getElementById("firmaCedula").innerText = cedula;
+  document.getElementById("firmaConductorNombre").innerText = conductorNombre;
+  document.getElementById("firmaConductorCedula").innerText = conductorCedula;
+
+  if (strict) {
+    setEstado("Documento generado correctamente.", false);
+  }
+  return true;
+}
+
+async function generar() {
+  if (!requireAuth()) return false;
+  for (let s = 0; s < 3; s += 1) {
+    if (!validateStep(s)) {
+      showStep(s);
+      return false;
+    }
+  }
+  if (!updatePreview(true)) {
+    return false;
+  }
+  documentoGenerado = true;
+  await saveDraftToSupabase();
+  await confirmCaseInSupabase();
+
+  if (window.innerWidth <= 430 && previewCard && !previewCard.classList.contains("show")) {
+    previewCard.classList.add("show");
+    if (togglePreviewBtn) togglePreviewBtn.textContent = "Ocultar vista previa";
+  }
+  return true;
+}
+
+async function confirmarDatos() {
+  if (!requireAuth()) return;
+  for (let s = 0; s < 3; s += 1) {
+    if (!validateStep(s)) {
+      showStep(s);
+      return;
+    }
+  }
+  if (!updatePreview(false)) return;
+
+  const tipo = valor("tipo");
+  const nombre = valor("nombre");
+  const cedula = valor("cedula");
+  const implicado = valor("implicado");
+  const cedulaImp = valor("cedulaImp");
+  const fecha = valor("fecha");
+  const placa = valor("placa");
+  const interno = valor("interno");
+  const conductorNombre = valor("conductorNombre");
+  const conductorCedula = valor("conductorCedula");
+  const nombreMenor = valor("nombreMenor");
+  const docMenor = valor("docMenor");
+  const parentesco = valor("parentesco");
+
+  let extraMenor = "";
+  if (tipo === "menor") {
+    extraMenor = `<p><strong>Menor:</strong> ${escapeHtml(nombreMenor)} | <strong>Documento:</strong> ${escapeHtml(docMenor)} | <strong>Parentesco:</strong> ${escapeHtml(parentesco)}</p>`;
+  }
+
+  confirmSummary.innerHTML = `
+    <p><strong>Tipo:</strong> ${tipo === "menor" ? "Representante de menor" : "Mayor de edad"}</p>
+    <p><strong>Compareciente:</strong> ${escapeHtml(nombre)} | <strong>Cedula:</strong> ${escapeHtml(cedula)}</p>
+    ${extraMenor}
+    <p><strong>Implicado:</strong> ${escapeHtml(implicado)} | <strong>Cedula:</strong> ${escapeHtml(cedulaImp)}</p>
+    <p><strong>Fecha:</strong> ${escapeHtml(fmtFecha(fecha))}</p>
+    <p><strong>Vehiculo:</strong> Placa ${escapeHtml(placa)} | Interno ${escapeHtml(interno)}</p>
+    <p><strong>Conductor:</strong> ${escapeHtml(conductorNombre)} | <strong>Cedula:</strong> ${escapeHtml(conductorCedula)}</p>
+    <p><strong>Firma compareciente:</strong> ${getSiNo(!signaturePad.isEmpty())} | <strong>Firma conductor:</strong> ${getSiNo(!signaturePadConductor.isEmpty())}</p>
+  `;
+  confirmModal.classList.add("show");
+  await saveDraftToSupabase();
+}
+
+function cerrarModalConfirmacion() {
+  confirmModal.classList.remove("show");
+}
+
+async function generarDesdeModal() {
+  if (!requireAuth()) return;
+  cerrarModalConfirmacion();
+  await generar();
+}
+
+async function enviarWebhookDirecto(webhook, payload) {
+  try {
+    const resp = await fetch(webhook, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}`);
+    }
+    return { ok: true, via: "cors" };
+  } catch (e) {
+    try {
+      await fetch(webhook, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(payload)
+      });
+      return { ok: true, via: "no-cors" };
+    } catch (e2) {
+      return { ok: false, error: e2?.message || e?.message || "Error webhook" };
+    }
+  }
+}
+
+async function encolarCorreo() {
+  if (!requireAuth()) return;
+  const email = valor("emailDestino");
+  const webhook = DEFAULT_WEBHOOK_URL;
+  if (!email) {
+    setEstado("Ingresa un correo destino para encolar el envio.");
+    return;
+  }
+
+  showLoadingModal(true);
+  let envioColaOk = false;
+  try {
+    setLoadingStep("Validando datos y firmas...", 12);
+    const okGenerar = await generar();
+    if (!okGenerar) {
+      setEstado("No se pudo confirmar los datos para enviar.");
+      return;
+    }
+
+    setLoadingStep("Generando y subiendo PDF...", 38);
+    const okPdf = await generarPdfYSubir(false);
+    if (!okPdf) {
+      setEstado("No se pudo preparar el PDF con link.");
+      return;
+    }
+
+    setLoadingStep("Guardando caso en nube...", 58);
+    if (!remoteCaseId || !remotePublicToken) {
+      const ok = await saveDraftToSupabase();
+      if (!ok) {
+        setEstado("No fue posible preparar el caso en nube.");
+        return;
+      }
+    }
+
+    setLoadingStep("Generando link de descarga...", 72);
+    const ensuredUrl = await ensureDownloadUrl();
+    if (!ensuredUrl) {
+      setEstado("No se pudo generar el link de descarga.");
+      return;
+    }
+
+    setLoadingStep("Encolando envío...", 84);
+    const { data, error } = await sb.rpc("firma_queue_email", {
+      p_case_id: remoteCaseId,
+      p_public_token: remotePublicToken,
+      p_to_email: email,
+      p_subject: "Documento de desistimiento firmado",
+      p_body: "Caso encolado desde formulario web.",
+      p_webhook_url: webhook
+    });
+    if (error || data !== true) {
+      setEstado("No se pudo encolar el envio por webhook.");
+      setEstadoCloud(`Error en cola de correo: ${sbErr(error)}`);
+      return;
+    }
+    envioColaOk = true;
+
+    setLoadingStep("Enviando webhook...", 92);
+    const payload = {
+      event: "firma_documento_encolado",
+      case_id: remoteCaseId,
+      public_token: remotePublicToken,
+      to_email: email,
+      pdf_storage_path: latestPdfStoragePath,
+      download_url: ensuredUrl,
+      created_at: new Date().toISOString()
+    };
+
+    const snapshot = getSnapshot();
+    const signedAt = new Date();
+    const signedAtUtc = signedAt.toISOString();
+    const signedAtLocal = formatSignedAtLocal(signedAt);
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Bogota";
+    const geo = await getGeolocationOnce();
+
+    payload.signed_by_name = snapshot.nombre || "";
+    payload.signed_by_role = "Firmante compareciente";
+    payload.recipient_statement = "La persona que recibe este correo es quien firma y acepta el documento.";
+    payload.signed_at_utc = signedAtUtc;
+    payload.signed_at_local = signedAtLocal;
+    payload.timezone = timezone;
+    payload.incident_date = snapshot.fecha || "";
+    payload.location = geo.ok
+      ? { latitude: geo.latitude, longitude: geo.longitude, accuracy_m: geo.accuracy_m }
+      : { unavailable: true, reason: geo.reason || "not_available" };
+
+    const direct = await enviarWebhookDirecto(webhook, payload);
+    setLoadingStep("Finalizando...", 100);
+
+    if (direct.ok) {
+      setEstado("Envío completado correctamente.", false);
+      setEstadoCloud(`Webhook enviado (${direct.via}).`);
+      showSendResultModal(
+        "Envío completado",
+        `<p><strong>Estado:</strong> Documento enviado correctamente.</p><p><strong>Correo:</strong> ${escapeHtml(email)}</p><p><strong>Caso:</strong> ${escapeHtml(remoteCaseId || "-")}</p>`,
+        ensuredUrl
+      );
+    } else {
+      setEstado("Envío parcialmente completado: cola OK, webhook directo falló.");
+      setEstadoCloud(`Cola OK. Webhook directo falló: ${direct.error}`);
+      showSendResultModal(
+        "Envío en cola",
+        `<p><strong>Estado:</strong> El documento quedó en cola y registrado en nube.</p><p><strong>Correo:</strong> ${escapeHtml(email)}</p><p><strong>Detalle webhook:</strong> ${escapeHtml(direct.error || "sin detalle")}</p>`,
+        ensuredUrl
+      );
+    }
+
+    if (envioColaOk) {
+      resetFormularioDespuesEnvio();
+    }
+  } finally {
+    setTimeout(() => showLoadingModal(false), 500);
+  }
+}
+
+confirmModal.addEventListener("click", (ev) => {
+  if (ev.target === confirmModal) cerrarModalConfirmacion();
+});
+
+if (sentModal) {
+  sentModal.addEventListener("click", (ev) => {
+    if (ev.target === sentModal) cerrarModalEnviado();
+  });
+}
+
+async function generarPdfYSubir(descargarArchivo = false) {
+  if (!documentoGenerado) return false;
+  const element = document.getElementById("documento");
+  const pdfWidth = 210;
+  const pdfHeight = 297;
+
+  try {
+    const cv = await window.html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff"
+    });
+    const imgData = cv.toDataURL("image/jpeg", 0.98);
+    const pdf = new window.jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
+    const pdfBlob = pdf.output("blob");
+
+    const dataUri = pdf.output("datauristring");
+    latestPdfBase64 = dataUri.split(",")[1] || null;
+    latestPdfSha256 = latestPdfBase64 ? await sha256Hex(latestPdfBase64) : null;
+    await attachPdfToSupabase();
+    await uploadPdfToStorage(pdfBlob);
+
+    if (descargarArchivo) {
+      pdf.save("DESISTIMIENTO.pdf");
+    }
+    return true;
+  } catch (_) {
+    setEstado("No fue posible generar el PDF.");
+    return false;
+  }
+}
+
+async function descargarPDF() {
+  if (!requireAuth()) return;
+  const okGenerar = await generar();
+  if (!okGenerar) {
+    setEstado("No se pudo confirmar los datos para descargar.");
+    return;
+  }
+  await generarPdfYSubir(true);
+}
+
+if (remoteCaseId && remotePublicToken) {
+  setEstadoCloud("Sesion con caso en nube recuperada.");
+} else {
+  setEstadoCloud("Sincronizacion en nube pendiente.");
+}
+
+renderAuthGate();
+updatePreview(false);
+initAuth();
+initContractSwitcher();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
